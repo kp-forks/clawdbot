@@ -1147,7 +1147,7 @@ describe("applyExtraParamsToAgent", () => {
     );
   });
 
-  it("leaves Atproxy Gemini thinking payload unchanged", () => {
+  it("sanitizes invalid Atproxy Gemini negative thinking budgets", () => {
     const payloads: Record<string, unknown>[] = [];
     const baseStreamFn: StreamFn = (_model, _context, options) => {
       const payload: Record<string, unknown> = {
@@ -1194,7 +1194,7 @@ describe("applyExtraParamsToAgent", () => {
     )?.thinkingConfig;
     expect(thinkingConfig).toEqual({
       includeThoughts: true,
-      thinkingBudget: -1,
+      thinkingLevel: "HIGH",
     });
     expect(
       (
@@ -1272,7 +1272,7 @@ describe("applyExtraParamsToAgent", () => {
       agents: {
         defaults: {
           models: {
-            "openai-codex/gpt-5.3-codex": {
+            "openai-codex/gpt-5.4": {
               params: {
                 transport: "websocket",
               },
@@ -1282,12 +1282,12 @@ describe("applyExtraParamsToAgent", () => {
       },
     };
 
-    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.3-codex");
+    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.4");
 
     const model = {
       api: "openai-codex-responses",
       provider: "openai-codex",
-      id: "gpt-5.3-codex",
+      id: "gpt-5.4",
     } as Model<"openai-codex-responses">;
     const context: Context = { messages: [] };
     void agent.streamFn?.(model, context, {});
@@ -1329,12 +1329,12 @@ describe("applyExtraParamsToAgent", () => {
   it("defaults Codex transport to auto (WebSocket-first)", () => {
     const { calls, agent } = createOptionsCaptureAgent();
 
-    applyExtraParamsToAgent(agent, undefined, "openai-codex", "gpt-5.3-codex");
+    applyExtraParamsToAgent(agent, undefined, "openai-codex", "gpt-5.4");
 
     const model = {
       api: "openai-codex-responses",
       provider: "openai-codex",
-      id: "gpt-5.3-codex",
+      id: "gpt-5.4",
     } as Model<"openai-codex-responses">;
     const context: Context = { messages: [] };
     void agent.streamFn?.(model, context, {});
@@ -1343,7 +1343,7 @@ describe("applyExtraParamsToAgent", () => {
     expect(calls[0]?.transport).toBe("auto");
   });
 
-  it("leaves OpenAI transport unset by default", () => {
+  it("defaults OpenAI transport to auto without websocket warm-up", () => {
     const { calls, agent } = createOptionsCaptureAgent();
 
     applyExtraParamsToAgent(agent, undefined, "openai", "gpt-5");
@@ -1357,8 +1357,8 @@ describe("applyExtraParamsToAgent", () => {
     void agent.streamFn?.(model, context, {});
 
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.transport).toBeUndefined();
-    expect(calls[0]?.openaiWsWarmup).toBeUndefined();
+    expect(calls[0]?.transport).toBe("auto");
+    expect(calls[0]?.openaiWsWarmup).toBe(false);
   });
 
   it("lets runtime options override OpenAI default transport", () => {
@@ -1446,7 +1446,7 @@ describe("applyExtraParamsToAgent", () => {
       agents: {
         defaults: {
           models: {
-            "openai-codex/gpt-5.3-codex": {
+            "openai-codex/gpt-5.4": {
               params: {
                 transport: "sse",
               },
@@ -1456,12 +1456,12 @@ describe("applyExtraParamsToAgent", () => {
       },
     };
 
-    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.3-codex");
+    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.4");
 
     const model = {
       api: "openai-codex-responses",
       provider: "openai-codex",
-      id: "gpt-5.3-codex",
+      id: "gpt-5.4",
     } as Model<"openai-codex-responses">;
     const context: Context = { messages: [] };
     void agent.streamFn?.(model, context, {});
@@ -1476,7 +1476,7 @@ describe("applyExtraParamsToAgent", () => {
       agents: {
         defaults: {
           models: {
-            "openai-codex/gpt-5.3-codex": {
+            "openai-codex/gpt-5.4": {
               params: {
                 transport: "websocket",
               },
@@ -1486,12 +1486,12 @@ describe("applyExtraParamsToAgent", () => {
       },
     };
 
-    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.3-codex");
+    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.4");
 
     const model = {
       api: "openai-codex-responses",
       provider: "openai-codex",
-      id: "gpt-5.3-codex",
+      id: "gpt-5.4",
     } as Model<"openai-codex-responses">;
     const context: Context = { messages: [] };
     void agent.streamFn?.(model, context, { transport: "sse" });
@@ -1506,7 +1506,7 @@ describe("applyExtraParamsToAgent", () => {
       agents: {
         defaults: {
           models: {
-            "openai-codex/gpt-5.3-codex": {
+            "openai-codex/gpt-5.4": {
               params: {
                 transport: "udp",
               },
@@ -1516,12 +1516,12 @@ describe("applyExtraParamsToAgent", () => {
       },
     };
 
-    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.3-codex");
+    applyExtraParamsToAgent(agent, cfg, "openai-codex", "gpt-5.4");
 
     const model = {
       api: "openai-codex-responses",
       provider: "openai-codex",
-      id: "gpt-5.3-codex",
+      id: "gpt-5.4",
     } as Model<"openai-codex-responses">;
     const context: Context = { messages: [] };
     void agent.streamFn?.(model, context, {});
@@ -1530,7 +1530,7 @@ describe("applyExtraParamsToAgent", () => {
     expect(calls[0]?.transport).toBe("auto");
   });
 
-  it("leaves prompt caching unset for non-Anthropic Bedrock models", () => {
+  it("disables prompt caching for non-Anthropic Bedrock models", () => {
     const { calls, agent } = createOptionsCaptureAgent();
 
     applyExtraParamsToAgent(agent, undefined, "amazon-bedrock", "amazon.nova-micro-v1");
@@ -1545,7 +1545,7 @@ describe("applyExtraParamsToAgent", () => {
     void agent.streamFn?.(model, context, {});
 
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.cacheRetention).toBeUndefined();
+    expect(calls[0]?.cacheRetention).toBe("none");
   });
 
   it("keeps Anthropic Bedrock models eligible for provider-side caching", () => {
@@ -1894,7 +1894,7 @@ describe("applyExtraParamsToAgent", () => {
         provider: "minimax-portal",
         id: "MiniMax-M2.7-highspeed",
         baseUrl: "https://api.minimax.io/anthropic",
-      } as Model<"anthropic-messages">,
+      } as unknown as Model<"anthropic-messages">,
     });
 
     expect(resolvedModelId).toBe("MiniMax-M2.7-highspeed");
@@ -1910,7 +1910,7 @@ describe("applyExtraParamsToAgent", () => {
         provider: "xai",
         id: "grok-4",
         baseUrl: "https://api.x.ai/v1",
-      } as Model<"openai-completions">,
+      } as unknown as Model<"openai-completions">,
     });
 
     expect(resolvedModelId).toBe("grok-4-fast");

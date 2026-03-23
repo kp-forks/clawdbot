@@ -1,15 +1,15 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { WebSocket } from "ws";
 import { emitAgentEvent, registerAgentRunContext } from "../infra/agent-events.js";
 import { extractFirstTextBlock } from "../shared/chat-message-content.js";
 import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../utils/message-channel.js";
 import {
   connectOk,
-  getReplyFromConfig,
   installGatewayTestHooks,
+  mockGetReplyFromConfigOnce,
   onceMessage,
   rpcReq,
   testState,
@@ -165,8 +165,7 @@ describe("gateway server chat", () => {
     const blockedReply = new Promise<void>((resolve) => {
       releaseBlockedReply = resolve;
     });
-    const replySpy = vi.mocked(getReplyFromConfig);
-    replySpy.mockImplementationOnce(async (_ctx, opts) => {
+    mockGetReplyFromConfigOnce(async (_ctx, opts) => {
       await new Promise<void>((resolve) => {
         let settled = false;
         const finish = () => {
@@ -563,11 +562,10 @@ describe("gateway server chat", () => {
 
   test("routes /btw replies through side-result events without transcript injection", async () => {
     await withMainSessionStore(async () => {
-      const replyMock = vi.mocked(getReplyFromConfig);
-      replyMock.mockResolvedValueOnce({
+      mockGetReplyFromConfigOnce(async () => ({
         text: "323",
         btw: { question: "what is 17 * 19?" },
-      });
+      }));
       const sideResultPromise = onceMessage(
         ws,
         (o) =>
@@ -619,8 +617,7 @@ describe("gateway server chat", () => {
 
   test("routes block-streamed /btw replies through side-result events", async () => {
     await withMainSessionStore(async () => {
-      const replyMock = vi.mocked(getReplyFromConfig);
-      replyMock.mockImplementationOnce(async (_ctx, opts) => {
+      mockGetReplyFromConfigOnce(async (_ctx, opts) => {
         await opts?.onBlockReply?.({
           text: "first chunk",
           btw: { question: "what changed?" },
